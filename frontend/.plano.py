@@ -26,7 +26,9 @@ image_tag = "quay.io/skupper/hello-world-frontend"
 def build(no_cache=False):
     no_cache_arg = "--no-cache" if no_cache else ""
 
-    run(f"podman build {no_cache_arg} --format docker -t {image_tag} .")
+    run(f"podman manifest rm {image_tag}", check=False)
+    run(f"podman rmi {image_tag}", check=False)
+    run(f"podman build {no_cache_arg} --format docker --platform linux/amd64,linux/arm64,linux/s390x,linux/ppc64le --file frontend/Containerfile --manifest {image_tag} ./frontend")
 
 @command
 def run_():
@@ -57,7 +59,7 @@ def debug():
 @command
 def push():
     run("podman login quay.io")
-    run(f"podman push {image_tag}")
+    run(f"podman manifest push {image_tag}")
 
 @command
 def update_gesso():
