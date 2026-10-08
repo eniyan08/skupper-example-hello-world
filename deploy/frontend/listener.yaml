@@ -1,0 +1,13 @@
+# Skupper Listener: creates a local Kubernetes Service named "backend" in dev-out.
+# The frontend calls http://backend:8080, and Skupper forwards the
+# traffic over the link to the Connector with the same routing key in rms-in.
+#
+# Requires: the Skupper site (skupper-frontend-site) already exists in dev-out.
+apiVersion: skupper.io/v2alpha1
+kind: Listener
+metadata:
+  name: backend
+spec:
+  routingKey: backend
+  host: backend
+  port: 8080

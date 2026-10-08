@@ -1,0 +1,17 @@
+# Exposes the frontend UI inside eks01.
+# For a quick demo, use: kubectl -n dev-out port-forward svc/frontend 8080:8080
+# To reach it from outside the cluster, change type to LoadBalancer.
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  labels:
+    app: frontend
+spec:
+  type: ClusterIP
+  selector:
+    app: frontend
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
