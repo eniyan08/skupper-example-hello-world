@@ -4,4 +4,3 @@ namespace: dev-out
 resources:
   - deployment.yaml
   - service.yaml
-  - listener.yaml

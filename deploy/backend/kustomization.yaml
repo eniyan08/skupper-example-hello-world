@@ -3,4 +3,3 @@ kind: Kustomization
 namespace: rms-in
 resources:
   - deployment.yaml
-  - connector.yaml
