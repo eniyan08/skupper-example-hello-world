@@ -1,0 +1,51 @@
+# Sends a greeting through the frontend every 12 minutes (5 requests per hour).
+# Path: CronJob -> frontend -> Skupper listener (backend:8080) -> backend pods.
+# Each request also shows up in the frontend UI's history.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: traffic-generator
+  labels:
+    app: traffic-generator
+spec:
+  schedule: "*/12 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 5
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 60
+      template:
+        metadata:
+          labels:
+            app: traffic-generator
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: curl
+              image: curlimages/curl:8.10.1
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 16Mi
+                limits:
+                  cpu: 100m
+                  memory: 64Mi
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -eu
+                  echo "$(date -u +%FT%TZ) sending greeting via http://frontend:8080/api/hello"
+                  response=$(curl -sS --max-time 15 -X POST \
+                    -H 'Content-Type: application/json' \
+                    -d '{"name":"Traffic Generator","text":"Hello from CronJob"}' \
+                    http://frontend:8080/api/hello)
+                  echo "response: ${response}"
+                  # The frontend returns HTTP 200 with a null body when it can't reach the backend,
+                  # so check for the backend's reply text instead of the status code.
+                  case "${response}" in
+                    *'"text"'*) echo "OK: backend reachable through Skupper" ;;
+                    *) echo "FAIL: backend did not respond"; exit 1 ;;
+                  esac
